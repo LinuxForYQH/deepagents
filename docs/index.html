@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deep Agents 源码分析与使用指南</title>
+<style>
+:root{--bg:#0f172a;--bg2:#1e293b;--bg3:#0d1117;--t1:#e2e8f0;--t2:#94a3b8;--t3:#64748b;--blue:#38bdf8;--purple:#a78bfa;--green:#4ade80;--orange:#fb923c;--pink:#f472b6;--cyan:#22d3ee;--border:#334155}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--t1);line-height:1.7}
+.sidebar{position:fixed;left:0;top:0;bottom:0;width:260px;background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;z-index:100;padding:20px 0}
+.sidebar h2{padding:0 20px 16px;font-size:1.2rem;background:linear-gradient(135deg,#667eea,#764ba2);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar .sub{font-size:.7rem;color:var(--t3);padding:0 20px 16px}
+.ns{font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--t3);padding:12px 20px 6px;font-weight:600}
+.nl{display:block;padding:5px 20px 5px 28px;color:var(--t2);text-decoration:none;font-size:.82rem;border-left:3px solid transparent;transition:.2s}
+.nl:hover{color:var(--blue);background:rgba(56,189,248,.05);border-left-color:var(--blue)}
+.mc{margin-left:260px;padding:36px 50px;max-width:1000px}
+.hero{text-align:center;padding:50px 0 36px}
+.badge{display:inline-block;background:rgba(167,139,250,.15);color:var(--purple);padding:5px 14px;border-radius:18px;font-size:.78rem;font-weight:600;margin-bottom:16px;border:1px solid rgba(167,139,250,.3)}
+.hero h1{font-size:2.6rem;font-weight:800;margin-bottom:12px;background:linear-gradient(135deg,#38bdf8,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:1.1rem;color:var(--t2);max-width:560px;margin:0 auto}
+section{margin-bottom:42px}
+h2{font-size:1.6rem;font-weight:700;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--border)}
+h3{font-size:1.2rem;font-weight:600;margin:24px 0 12px;color:var(--blue)}
+h4{font-size:1rem;font-weight:600;margin:16px 0 8px;color:var(--purple)}
+p{margin-bottom:12px;color:var(--t2);font-size:.92rem}
+pre{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;overflow-x:auto;margin:14px 0;font-size:.82rem;line-height:1.6}
+code{font-family:'JetBrains Mono','Fira Code',Consolas,monospace;font-size:.83em}
+:not(pre)>code{background:rgba(56,189,248,.1);color:var(--cyan);padding:2px 6px;border-radius:4px;font-size:.8em}
+.kw{color:#c678dd}.fn{color:#61afef}.str{color:#98c379}.cmt{color:#5c6370;font-style:italic}.cls{color:#e5c07b}.dec{color:#d19a66}
+.cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin:16px 0}
+.cd{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:20px;transition:.3s}
+.cd:hover{border-color:var(--blue);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.cd .ci{font-size:1.8rem;margin-bottom:8px}
+.cd h4{color:var(--t1);margin:0 0 6px;font-size:1rem}
+.cd p{font-size:.82rem;margin:0}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:.85rem}
+th{background:rgba(56,189,248,.1);color:var(--blue);text-align:left;padding:10px 14px;font-weight:600;border-bottom:2px solid var(--border)}
+td{padding:8px 14px;border-bottom:1px solid var(--border);color:var(--t2)}
+tr:hover td{background:rgba(255,255,255,.02)}
+.ib{border-radius:8px;padding:16px 20px;margin:14px 0;border-left:4px solid}
+.ib.bl{background:rgba(56,189,248,.06);border-color:var(--blue)}
+.ib.gr{background:rgba(74,222,128,.06);border-color:var(--green)}
+.ib.or{background:rgba(251,146,60,.06);border-color:var(--orange)}
+.ib.pu{background:rgba(167,139,250,.06);border-color:var(--purple)}
+.ib b{display:block;margin-bottom:4px;font-size:.88rem}
+.ib p{font-size:.83rem;margin:0}
+.tg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.7rem;font-weight:600;margin:2px 3px 2px 0}
+.tg-b{background:rgba(56,189,248,.15);color:var(--blue)}.tg-g{background:rgba(74,222,128,.15);color:var(--green)}.tg-p{background:rgba(167,139,250,.15);color:var(--purple)}.tg-o{background:rgba(251,146,60,.15);color:var(--orange)}.tg-k{background:rgba(244,114,182,.15);color:var(--pink)}
+ul,ol{padding-left:22px;margin-bottom:12px}
+li{color:var(--t2);margin-bottom:5px;font-size:.88rem}
+.arch{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:24px;margin:16px 0;font-family:'JetBrains Mono',monospace;font-size:.72rem;line-height:1.5;overflow-x:auto;white-space:pre;color:var(--t2)}
+@media(max-width:900px){.sidebar{display:none}.mc{margin-left:0;padding:20px 16px}.hero h1{font-size:1.8rem}.cg{grid-template-columns:1fr}}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+<nav class="sidebar">
+<h2>🧠 Deep Agents</h2>
+<div class="sub">v0.5.0a2 · 源码分析与使用指南</div>
+<div class="ns">概览</div>
+<a href="#overview" class="nl">项目简介</a>
+<a href="#architecture" class="nl">架构总览</a>
+<a href="#quickstart" class="nl">快速上手</a>
+<div class="ns">核心 API</div>
+<a href="#create-deep-agent" class="nl">create_deep_agent()</a>
+<a href="#parameters" class="nl">参数详解</a>
+<a href="#public-api" class="nl">公共 API</a>
+<div class="ns">Backend 存储层</div>
+<a href="#backends" class="nl">Backend 体系</a>
+<a href="#backend-types" class="nl">各类 Backend</a>
+<div class="ns">中间件系统</div>
+<a href="#middleware" class="nl">中间件体系</a>
+<a href="#middleware-list" class="nl">中间件列表</a>
+<div class="ns">基础用法</div>
+<a href="#basic-usage" class="nl">基础用法</a>
+<a href="#custom-tools" class="nl">自定义工具</a>
+<a href="#subagents" class="nl">子代理</a>
+<a href="#skills-memory" class="nl">技能与记忆</a>
+<div class="ns">示例项目</div>
+<a href="#examples-overview" class="nl">示例总览</a>
+<a href="#ex-deep-research" class="nl">🔬 Deep Research</a>
+<a href="#ex-content-builder" class="nl">✍️ Content Builder</a>
+<a href="#ex-text-to-sql" class="nl">🗄️ Text-to-SQL</a>
+<a href="#ex-nvidia" class="nl">🎮 NVIDIA GPU Agent</a>
+<a href="#ex-ralph-mode" class="nl">🔄 Ralph Mode</a>
+<a href="#ex-downloading" class="nl">📦 下载即用</a>
+<div class="ns">LangGraph 示例</div>
+<a href="#lg-overview" class="nl">LangGraph 模式总览</a>
+<a href="#lg-agent-patterns" class="nl">Agent 设计模式</a>
+<a href="#lg-rag" class="nl">RAG 变体 (4种)</a>
+<a href="#lg-research" class="nl">研究论文实现</a>
+<a href="#lg-tools" class="nl">应用工具类</a>
+<div class="ns">进阶</div>
+<a href="#design" class="nl">设计理念</a>
+<a href="#monorepo" class="nl">仓库结构</a>
+</nav>
+
+<div class="mc">
+<div class="hero">
+<div class="badge">📖 Source Code Analysis</div>
+<h1>Deep Agents</h1>
+<p>基于 LangGraph 的 "batteries-included" 智能代理框架<br>源码深度解析与使用指南</p>
+</div>
+
+<!-- Overview -->
+<section id="overview">
+<h2>🎯 项目简介</h2>
+<p><strong>Deep Agents</strong> 是 LangChain 团队开发的开箱即用智能代理框架。借鉴 Claude Code、Deep Research、Manus 等产品理念，通过四大支柱实现深层任务处理。</p>
+<div class="cg">
+<div class="cd"><div class="ci">📋</div><h4>规划 (Planning)</h4><p><code>write_todos</code> 让代理自主分解任务、跟踪进度</p></div>
+<div class="cd"><div class="ci">📁</div><h4>文件系统 (Filesystem)</h4><p><code>read_file</code>、<code>write_file</code>、<code>edit_file</code>、<code>ls</code>、<code>glob</code>、<code>grep</code></p></div>
+<div class="cd"><div class="ci">🤖</div><h4>子代理 (Sub-agents)</h4><p><code>task</code> 工具支持将复杂任务委派给独立子代理</p></div>
+<div class="cd"><div class="ci">💡</div><h4>智能提示 (Smart Prompts)</h4><p>内置精心设计的系统提示，教会模型有效使用工具</p></div>
+</div>
+<div class="ib bl"><b>💡 核心定位</b><p>一个有主见的、开箱即用的代理框架。无需自己编排提示词、工具和上下文管理——直接获得一个可工作的代理，按需定制。</p></div>
+</section>
+
+<!-- Architecture -->
+<section id="architecture">
+<h2>🏗️ 架构总览</h2>
+<p>架构分为三层：<strong>入口层</strong>（create_deep_agent）、<strong>中间件层</strong>（Middleware Stack）、<strong>存储层</strong>（Backend）。</p>
+<div class="arch"><span style="color:#38bdf8">用户调用</span> create_deep_agent(model, tools, subagents, skills, memory, backend, ...)
+                    │
+                    ▼
+          ┌────────────────────────────────────┐
+          │  <span style="color:#a78bfa">resolve_model()</span>                     │  字符串 → BaseChatModel
+          │  支持 provider:model 格式            │  默认: claude-sonnet-4-6
+          └────────┬───────────────────────────┘
+                   │
+                   ▼
+          ┌────────────────────────────────────┐
+          │  <span style="color:#4ade80">构建中间件栈 (有序)</span>                   │
+          │                                    │
+          │  1. TodoListMiddleware              │  📋 规划/待办
+          │  2. SkillsMiddleware?               │  📚 技能注入
+          │  3. FilesystemMiddleware            │  📁 文件工具
+          │  4. SubAgentMiddleware              │  🤖 task 工具
+          │  5. SummarizationMiddleware         │  📦 对话压缩
+          │  6. PatchToolCallsMiddleware        │  🔧 修补 tool_call
+          │  7. AsyncSubAgentMiddleware?        │  ⚡ 异步子代理
+          │  8. 用户自定义 middleware            │
+          │  9. AnthropicCachingMiddleware      │  💰 提示缓存
+          │ 10. MemoryMiddleware?               │  🧠 AGENTS.md
+          │ 11. HumanInTheLoopMiddleware?       │  👤 人工审批
+          └────────┬───────────────────────────┘
+                   │
+                   ▼
+          ┌────────────────────────────────────┐
+          │  <span style="color:#fb923c">合并系统提示</span>                         │
+          │  user_prompt + BASE_AGENT_PROMPT    │
+          └────────┬───────────────────────────┘
+                   │
+                   ▼
+          ┌────────────────────────────────────┐
+          │  <span style="color:#f472b6">langchain.create_agent()</span>             │ → CompiledStateGraph
+          │  recursion_limit = 10,001          │
+          └────────────────────────────────────┘
+                   │
+          <span style="color:#22d3ee">Backend 层 (可插拔)</span>:
+          ┌────────────────────────────────────────────┐
+          │ StateBackend    │ FilesystemBackend         │
+          │ StoreBackend    │ LocalShellBackend         │
+          │ CompositeBackend│ BaseSandbox/LangSmithSandbox│
+          └────────────────────────────────────────────┘</div>
+</section>
+
+<!-- Quick Start -->
+<section id="quickstart">
+<h2>🚀 快速上手</h2>
+<h3>安装</h3>
+<pre><code><span class="cmt"># pip</span>
+pip install deepagents
+<span class="cmt"># 或 uv</span>
+uv add deepagents</code></pre>
+<h3>最简用法</h3>
+<pre><code><span class="kw">from</span> <span class="cls">deepagents</span> <span class="kw">import</span> create_deep_agent
+
+agent = <span class="fn">create_deep_agent</span>()
+result = agent.<span class="fn">invoke</span>({
+    <span class="str">"messages"</span>: [{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Research LangGraph and write a summary"</span>}]
+})</code></pre>
+<div class="ib gr"><b>✅ 立即可用</b><p>默认配置下，代理自带文件读写、规划、子代理、上下文压缩等完整能力。</p></div>
+</section>
+
+<!-- create_deep_agent -->
+<section id="create-deep-agent">
+<h2>⚙️ create_deep_agent()</h2>
+<p>核心入口函数，位于 <code>deepagents/graph.py</code>。返回 <code>CompiledStateGraph</code>，可直接 invoke/stream。</p>
+<pre><code><span class="kw">def</span> <span class="fn">create_deep_agent</span>(
+    model: <span class="cls">str | BaseChatModel | None</span> = <span class="cls">None</span>,
+    tools: <span class="cls">Sequence[BaseTool | Callable | dict] | None</span> = <span class="cls">None</span>,
+    *, <span class="cmt"># 以下均为关键字参数</span>
+    system_prompt: <span class="cls">str | SystemMessage | None</span> = <span class="cls">None</span>,
+    middleware: <span class="cls">Sequence[AgentMiddleware]</span> = (),
+    subagents: <span class="cls">Sequence[SubAgent | CompiledSubAgent | AsyncSubAgent] | None</span> = <span class="cls">None</span>,
+    skills: <span class="cls">list[str] | None</span> = <span class="cls">None</span>,
+    memory: <span class="cls">list[str] | None</span> = <span class="cls">None</span>,
+    backend: <span class="cls">BackendProtocol | BackendFactory | None</span> = <span class="cls">None</span>,
+    checkpointer: <span class="cls">Checkpointer | None</span> = <span class="cls">None</span>,
+    store: <span class="cls">BaseStore | None</span> = <span class="cls">None</span>,
+    interrupt_on: <span class="cls">dict[str, bool | InterruptOnConfig] | None</span> = <span class="cls">None</span>,
+    debug: <span class="cls">bool</span> = <span class="cls">False</span>,
+    name: <span class="cls">str | None</span> = <span class="cls">None</span>,
+    cache: <span class="cls">BaseCache | None</span> = <span class="cls">None</span>,
+) -> <span class="cls">CompiledStateGraph</span></code></pre>
+</section>
+
+<!-- Parameters -->
+<section id="parameters">
+<h2>📋 参数详解</h2>
+<table>
+<tr><th>参数</th><th>类型</th><th>默认值</th><th>说明</th></tr>
+<tr><td><code>model</code></td><td>str | BaseChatModel</td><td>claude-sonnet-4-6</td><td>支持 <code>"provider:model"</code> 格式</td></tr>
+<tr><td><code>tools</code></td><td>Sequence[...]</td><td>None</td><td>自定义工具，与内置工具合并</td></tr>
+<tr><td><code>system_prompt</code></td><td>str | SystemMessage</td><td>None</td><td>自定义提示，与内置提示合并</td></tr>
+<tr><td><code>middleware</code></td><td>Sequence[AgentMiddleware]</td><td>()</td><td>额外中间件</td></tr>
+<tr><td><code>subagents</code></td><td>Sequence[SubAgent | ...]</td><td>None</td><td>子代理配置（同步/异步/预编译）</td></tr>
+<tr><td><code>skills</code></td><td>list[str]</td><td>None</td><td>技能目录路径</td></tr>
+<tr><td><code>memory</code></td><td>list[str]</td><td>None</td><td>AGENTS.md 文件路径</td></tr>
+<tr><td><code>backend</code></td><td>BackendProtocol</td><td>StateBackend</td><td>文件存储后端</td></tr>
+<tr><td><code>interrupt_on</code></td><td>dict[str, ...]</td><td>None</td><td>人工审批（如 <code>{"edit_file": True}</code>）</td></tr>
+</table>
+</section>
+
+<!-- Public API -->
+<section id="public-api">
+<h2>📦 公共 API</h2>
+<pre><code><span class="kw">from</span> <span class="cls">deepagents</span> <span class="kw">import</span> (
+    create_deep_agent,         <span class="cmt"># 主入口</span>
+    SubAgent,                  <span class="cmt"># 同步子代理规格</span>
+    CompiledSubAgent,          <span class="cmt"># 预编译子代理规格</span>
+    AsyncSubAgent,             <span class="cmt"># 异步子代理规格</span>
+    SubAgentMiddleware,        <span class="cmt"># 同步子代理中间件</span>
+    AsyncSubAgentMiddleware,   <span class="cmt"># 异步子代理中间件</span>
+    FilesystemMiddleware,      <span class="cmt"># 文件系统中间件</span>
+    MemoryMiddleware,          <span class="cmt"># 记忆中间件</span>
+    __version__,               <span class="cmt"># "0.5.0a2"</span>
+)</code></pre>
+</section>
+
+<!-- Backends -->
+<section id="backends">
+<h2>💾 Backend 存储层</h2>
+<p>所有 Backend 实现统一的 <code>BackendProtocol</code> 接口：</p>
+<table>
+<tr><th>方法</th><th>功能</th><th>异步版</th></tr>
+<tr><td><code>ls(path)</code></td><td>列出目录</td><td><code>als()</code></td></tr>
+<tr><td><code>read(path, offset, limit)</code></td><td>读取文件（分页）</td><td><code>aread()</code></td></tr>
+<tr><td><code>write(path, content)</code></td><td>创建新文件</td><td><code>awrite()</code></td></tr>
+<tr><td><code>edit(path, old, new)</code></td><td>字符串替换</td><td><code>aedit()</code></td></tr>
+<tr><td><code>grep(pattern, path, glob)</code></td><td>文本搜索</td><td><code>agrep()</code></td></tr>
+<tr><td><code>glob(pattern, path)</code></td><td>模式匹配</td><td><code>aglob()</code></td></tr>
+<tr><td><code>upload_files()</code></td><td>批量上传</td><td><code>aupload_files()</code></td></tr>
+<tr><td><code>download_files()</code></td><td>批量下载</td><td><code>adownload_files()</code></td></tr>
+</table>
+</section>
+
+<section id="backend-types">
+<h3>各类 Backend</h3>
+<div class="cg">
+<div class="cd"><h4>StateBackend <span class="tg tg-b">默认</span><span class="tg tg-o">临时</span></h4><p>文件存储在 LangGraph state 中，随对话持续但不跨线程</p></div>
+<div class="cd"><h4>FilesystemBackend <span class="tg tg-g">本地</span></h4><p>直接读写文件系统。支持 root_dir、virtual_mode。Grep 优先 ripgrep</p></div>
+<div class="cd"><h4>StoreBackend <span class="tg tg-p">持久化</span></h4><p>基于 LangGraph BaseStore，跨线程持久化，用 namespace 隔离</p></div>
+<div class="cd"><h4>CompositeBackend <span class="tg tg-b">路由</span></h4><p>按路径前缀路由到不同 backend</p></div>
+<div class="cd"><h4>LocalShellBackend <span class="tg tg-o">Shell</span></h4><p>继承 FilesystemBackend + 本地 shell 执行（无沙箱）</p></div>
+<div class="cd"><h4>LangSmithSandbox <span class="tg tg-k">云端</span></h4><p>基于 LangSmith SDK 的云端沙箱</p></div>
+</div>
+<pre><code><span class="kw">from</span> <span class="cls">deepagents.backends</span> <span class="kw">import</span> FilesystemBackend
+
+backend = <span class="fn">FilesystemBackend</span>(root_dir=<span class="str">"./project"</span>, virtual_mode=<span class="cls">True</span>)
+agent = <span class="fn">create_deep_agent</span>(backend=backend)</code></pre>
+<div class="ib or"><b>⚠️ 安全警告</b><p>FilesystemBackend/LocalShellBackend 赋予代理直接文件系统访问权限。建议配合 HITL 中间件或在沙箱中使用。</p></div>
+</section>
+
+<!-- Middleware -->
+<section id="middleware">
+<h2>🔌 中间件体系</h2>
+<p>中间件能<strong>拦截每次 LLM 调用</strong>，动态修改工具列表、注入系统提示、管理跨轮次状态——这是普通工具函数做不到的。</p>
+<div class="ib pu"><b>为什么用中间件？</b><p>① 动态过滤工具列表 ② 注入系统提示上下文 ③ 转换消息（上下文压缩） ④ 维护跨轮次状态。工具只能被 LLM 调用，不能拦截 LLM 调用。</p></div>
+</section>
+
+<section id="middleware-list">
+<h3>中间件列表</h3>
+<table>
+<tr><th>中间件</th><th>职责</th></tr>
+<tr><td><code>FilesystemMiddleware</code></td><td>注册 ls/read_file/write_file/edit_file/grep/glob/execute 工具，根据 backend 动态过滤</td></tr>
+<tr><td><code>MemoryMiddleware</code></td><td>加载 AGENTS.md 内容，注入到 &lt;agent_memory&gt; 标签，含学习反馈指导</td></tr>
+<tr><td><code>SkillsMiddleware</code></td><td>加载 SKILL.md（YAML frontmatter），渐进式披露：列表仅显示名称+描述</td></tr>
+<tr><td><code>SubAgentMiddleware</code></td><td>注册 task 工具，管理同步子代理，状态隔离</td></tr>
+<tr><td><code>AsyncSubAgentMiddleware</code></td><td>管理远程异步子代理，通过 LangGraph SDK 启动后台任务</td></tr>
+<tr><td><code>SummarizationMiddleware</code></td><td>自动对话压缩 + compact_conversation 手动触发工具</td></tr>
+<tr><td><code>PatchToolCallsMiddleware</code></td><td>为缺少 ToolMessage 的 tool_calls 补充"已取消"消息</td></tr>
+<tr><td><code>TodoListMiddleware</code></td><td>提供 write_todos 规划工具（来自 langchain.agents）</td></tr>
+</table>
+</section>
+
+<!-- Basic Usage -->
+<section id="basic-usage">
+<h2>💻 基础用法</h2>
+<pre><code><span class="kw">from</span> <span class="cls">deepagents</span> <span class="kw">import</span> create_deep_agent
+
+<span class="cmt"># 1. 默认配置</span>
+agent = <span class="fn">create_deep_agent</span>()
+
+<span class="cmt"># 2. 指定模型</span>
+agent = <span class="fn">create_deep_agent</span>(model=<span class="str">"openai:gpt-4o"</span>)
+
+<span class="cmt"># 3. 自定义系统提示</span>
+agent = <span class="fn">create_deep_agent</span>(system_prompt=<span class="str">"You are a Python expert."</span>)
+
+<span class="cmt"># 4. 同步调用</span>
+result = agent.<span class="fn">invoke</span>({<span class="str">"messages"</span>: [{<span class="str">"role"</span>: <span class="str">"user"</span>, <span class="str">"content"</span>: <span class="str">"Analyze this code"</span>}]})
+
+<span class="cmt"># 5. 异步流式</span>
+<span class="kw">async for</span> chunk <span class="kw">in</span> agent.<span class="fn">astream</span>(
+    {<span class="str">"messages"</span>: [(<span class="str">"user"</span>, <span class="str">"Research AI trends"</span>)]},
+    config={<span class="str">"configurable"</span>: {<span class="str">"thread_id"</span>: <span class="str">"t1"</span>}},
+    stream_mode=<span class="str">"values"</span>,
+): <span class="kw">print</span>(chunk)</code></pre>
+</section>
+
+<!-- Custom Tools -->
+<section id="custom-tools">
+<h2>🛠️ 自定义工具</h2>
+<pre><code><span class="kw">from</span> <span class="cls">langchain_core.tools</span> <span class="kw">import</span> tool
+
+<span class="dec">@tool</span>
+<span class="kw">def</span> <span class="fn">web_search</span>(query: <span class="cls">str</span>, max_results: <span class="cls">int</span> = 5) -> <span class="cls">dict</span>:
+    <span class="str">"""Search the web for information."""</span>
+    <span class="kw">return</span> {<span class="str">"results"</span>: [...]}
+
+agent = <span class="fn">create_deep_agent</span>(tools=[web_search])</code></pre>
+</section>
+
+<!-- Subagents -->
+<section id="subagents">
+<h2>🤖 子代理配置</h2>
+<h3>1. SubAgent（声明式同步）</h3>
+<pre><code>agent = <span class="fn">create_deep_agent</span>(subagents=[{
+    <span class="str">"name"</span>: <span class="str">"researcher"</span>,
+    <span class="str">"description"</span>: <span class="str">"Research topics thoroughly"</span>,
+    <span class="str">"system_prompt"</span>: <span class="str">"You are a research assistant..."</span>,
+    <span class="str">"model"</span>: <span class="str">"anthropic:claude-haiku-4-5-20251001"</span>,
+    <span class="str">"tools"</span>: [web_search],
+}])</code></pre>
+<h3>2. CompiledSubAgent（预编译 Runnable）</h3>
+<pre><code>custom = <span class="fn">create_agent</span>(<span class="str">"openai:gpt-4o"</span>, tools=[...])
+agent = <span class="fn">create_deep_agent</span>(subagents=[{
+    <span class="str">"name"</span>: <span class="str">"custom"</span>, <span class="str">"description"</span>: <span class="str">"Pre-built agent"</span>, <span class="str">"runnable"</span>: custom
+}])</code></pre>
+<h3>3. AsyncSubAgent（远程异步）</h3>
+<pre><code>agent = <span class="fn">create_deep_agent</span>(subagents=[{
+    <span class="str">"name"</span>: <span class="str">"remote"</span>, <span class="str">"description"</span>: <span class="str">"Remote worker"</span>,
+    <span class="str">"graph_id"</span>: <span class="str">"my-deployment"</span>, <span class="str">"url"</span>: <span class="str">"https://server.dev"</span>
+}])</code></pre>
+<div class="ib bl"><b>💡 自动创建 general-purpose 子代理</b><p>如果未提供名为 "general-purpose" 的子代理，框架会自动创建一个拥有完整中间件栈和工具的通用子代理。</p></div>
+</section>
+
+<!-- Skills & Memory -->
+<section id="skills-memory">
+<h2>🧠 技能与记忆</h2>
+<h3>记忆 (AGENTS.md)</h3>
+<pre><code>agent = <span class="fn">create_deep_agent</span>(
+    memory=[<span class="str">"./AGENTS.md"</span>],
+    backend=<span class="fn">FilesystemBackend</span>(root_dir=<span class="str">"./"</span>),
+)</code></pre>
+<h3>技能 (SKILL.md)</h3>
+<pre><code><span class="cmt"># SKILL.md 格式（YAML frontmatter + Markdown）:</span>
+---
+name: web-research
+description: Structured approach to web research
+license: MIT
+---
+# Web Research Skill
+## Workflow
+1. Search → 2. Organize → 3. Synthesize</code></pre>
+<pre><code>agent = <span class="fn">create_deep_agent</span>(
+    skills=[<span class="str">"./skills/"</span>],
+    backend=<span class="fn">FilesystemBackend</span>(root_dir=<span class="str">"./"</span>),
+)</code></pre>
+</section>
+
+<!-- Examples Overview -->
+<section id="examples-overview">
+<h2>📚 示例项目总览</h2>
+<p>Deep Agents 提供 6 个官方示例，覆盖从研究到数据分析、内容创作、自主循环等多种场景，充分展示框架各功能的使用方式。</p>
+<div class="cg">
+<div class="cd"><div class="ci">🔬</div><h4>Deep Research</h4><p>多步骤深度网络研究，使用 Tavily 搜索 + 并行子代理 + 战略反思</p><p><span class="tg tg-b">子代理</span><span class="tg tg-g">自定义提示</span><span class="tg tg-p">LangGraph Server</span></p></div>
+<div class="cd"><div class="ci">✍️</div><h4>Content Builder</h4><p>文件系统驱动的内容写作代理，博客/LinkedIn/推特 + 自动配图</p><p><span class="tg tg-b">Memory</span><span class="tg tg-g">Skills</span><span class="tg tg-p">子代理</span><span class="tg tg-o">FilesystemBackend</span></p></div>
+<div class="cd"><div class="ci">🗄️</div><h4>Text-to-SQL</h4><p>自然语言转 SQL 查询，规划 + 技能工作流 + Chinook 数据库</p><p><span class="tg tg-b">Memory</span><span class="tg tg-g">Skills</span><span class="tg tg-o">FilesystemBackend</span></p></div>
+<div class="cd"><div class="ci">🎮</div><h4>NVIDIA GPU Agent</h4><p>多模型架构 + GPU 代码执行，RAPIDS cuDF/cuML + Modal 沙箱</p><p><span class="tg tg-b">多模型</span><span class="tg tg-g">GPU 沙箱</span><span class="tg tg-p">自改进</span><span class="tg tg-k">context_schema</span></p></div>
+<div class="cd"><div class="ci">🔄</div><h4>Ralph Mode</h4><p>自主循环模式，每次迭代全新上下文，文件系统作为持久化记忆</p><p><span class="tg tg-b">CLI 集成</span><span class="tg tg-o">远程沙箱</span></p></div>
+<div class="cd"><div class="ci">📦</div><h4>下载即用 Agent</h4><p>Agent = 文件夹，下载 zip 解压即可运行，无需编写代码</p><p><span class="tg tg-g">零配置</span><span class="tg tg-b">deepagents-cli</span></p></div>
+</div>
+
+<table>
+<tr><th>示例</th><th>使用的功能</th><th>模型</th><th>运行方式</th></tr>
+<tr><td>Deep Research</td><td>子代理、system_prompt、自定义工具</td><td>Claude Sonnet 4.5</td><td>Jupyter / LangGraph Server</td></tr>
+<tr><td>Content Builder</td><td>Memory、Skills、子代理、FilesystemBackend</td><td>Claude + Haiku 子代理</td><td>CLI (uv run)</td></tr>
+<tr><td>Text-to-SQL</td><td>Memory、Skills、FilesystemBackend、SQL 工具</td><td>Claude Sonnet 4.5</td><td>CLI (python agent.py)</td></tr>
+<tr><td>NVIDIA GPU</td><td>Memory、Skills、多模型、Modal 沙箱、context_schema</td><td>Claude + Nemotron Super</td><td>LangGraph Server</td></tr>
+<tr><td>Ralph Mode</td><td>deepagents-cli、自主循环</td><td>可配置</td><td>CLI (python ralph_mode.py)</td></tr>
+<tr><td>下载即用</td><td>deepagents-cli</td><td>自动检测</td><td>deepagents CLI</td></tr>
+</table>
+</section>
+
+<!-- Example 1: Deep Research -->
+<section id="ex-deep-research">
+<h2>🔬 示例一：Deep Research — 深度网络研究</h2>
+<p>一个多步骤深度研究代理，使用 <strong>Tavily</strong> 作为 URL 发现引擎（非摘要引擎），配合 <strong>httpx 全文抓取 + markdownify 转换</strong>，并通过 <code>think_tool</code> 实现战略反思。</p>
+
+<h3>架构设计</h3>
+<div class="arch"><span style="color:#38bdf8">编排器 (claude-sonnet-4-5)</span>
+    │   RESEARCH_WORKFLOW_INSTRUCTIONS + SUBAGENT_DELEGATION_INSTRUCTIONS
+    │
+    ├── <span style="color:#4ade80">tavily_search</span>     URL 发现 → httpx 全文抓取 → markdownify 转 Markdown
+    ├── <span style="color:#a78bfa">think_tool</span>        战略反思：分析发现 → 识别差距 → 规划下一步
+    │
+    └── <span style="color:#fb923c">子代理: research-agent</span> (最多3个并行, 最多3轮)
+            │   RESEARCHER_INSTRUCTIONS
+            ├── tavily_search
+            └── think_tool</div>
+
+<h3>核心代码</h3>
+<pre><code><span class="kw">from</span> <span class="cls">deepagents</span> <span class="kw">import</span> create_deep_agent
+<span class="kw">from</span> <span class="cls">langchain.chat_models</span> <span class="kw">import</span> init_chat_model
+
+<span class="cmt"># 编排器指令 = 研究工作流 + 子代理委托策略</span>
+INSTRUCTIONS = RESEARCH_WORKFLOW_INSTRUCTIONS + SUBAGENT_DELEGATION_INSTRUCTIONS
+
+<span class="cmt"># 定义研究子代理</span>
+research_sub_agent = {
+    <span class="str">"name"</span>: <span class="str">"research-agent"</span>,
+    <span class="str">"description"</span>: <span class="str">"Delegate research to the sub-agent researcher."</span>,
+    <span class="str">"system_prompt"</span>: RESEARCHER_INSTRUCTIONS.<span class="fn">format</span>(date=current_date),
+    <span class="str">"tools"</span>: [tavily_search, think_tool],
+}
+
+model = <span class="fn">init_chat_model</span>(model=<span class="str">"anthropic:claude-sonnet-4-5-20250929"</span>, temperature=<span class="dec">0.0</span>)
+
+agent = <span class="fn">create_deep_agent</span>(
+    model=model,
+    tools=[tavily_search, think_tool],
+    system_prompt=INSTRUCTIONS,
+    subagents=[research_sub_agent],
+)</code></pre>
+
+<h3>自定义工具详解</h3>
+<h4>tavily_search — URL 发现 + 全文抓取</h4>
+<pre><code><span class="dec">@tool</span>(parse_docstring=<span class="cls">True</span>)
+<span class="kw">def</span> <span class="fn">tavily_search</span>(
+    query: <span class="cls">str</span>,
+    max_results: <span class="cls">Annotated</span>[<span class="cls">int</span>, <span class="cls">InjectedToolArg</span>] = <span class="dec">1</span>,      <span class="cmt"># 对 LLM 隐藏</span>
+    topic: <span class="cls">Annotated</span>[<span class="cls">Literal</span>[...], <span class="cls">InjectedToolArg</span>] = <span class="str">"general"</span>,
+) -> <span class="cls">str</span>:
+    <span class="cmt"># 1. Tavily 发现 URL（不使用其摘要）</span>
+    search_results = tavily_client.<span class="fn">search</span>(query, max_results=max_results)
+    <span class="cmt"># 2. httpx 抓取完整网页</span>
+    content = <span class="fn">fetch_webpage_content</span>(url)  <span class="cmt"># → markdownify 转 Markdown</span>
+    <span class="kw">return</span> formatted_results</code></pre>
+
+<h4>think_tool — 战略反思</h4>
+<pre><code><span class="dec">@tool</span>(parse_docstring=<span class="cls">True</span>)
+<span class="kw">def</span> <span class="fn">think_tool</span>(reflection: <span class="cls">str</span>) -> <span class="cls">str</span>:
+    <span class="str">"""让代理暂停评估进度、分析差距、规划下一步。"""</span>
+    <span class="kw">return</span> <span class="str">f"Reflection recorded: {reflection}"</span></code></pre>
+
+<h3>三层 Prompt 架构</h3>
+<table>
+<tr><th>提示词</th><th>作用对象</th><th>内容</th></tr>
+<tr><td><code>RESEARCH_WORKFLOW</code></td><td>编排器</td><td>5 步工作流：保存请求 → 规划 TODO → 委托子代理 → 综合 → 写报告</td></tr>
+<tr><td><code>SUBAGENT_DELEGATION</code></td><td>编排器</td><td>委托策略：简单查询 1 个子代理，比较类 1 个/元素，最多 3 并行</td></tr>
+<tr><td><code>RESEARCHER_INSTRUCTIONS</code></td><td>研究子代理</td><td>搜索预算（简单 2-3 次，复杂最多 5 次），每次搜索后使用 think_tool 反思</td></tr>
+</table>
+
+<h3>运行方式</h3>
+<pre><code><span class="cmt"># 方式 1: Jupyter Notebook</span>
+cd examples/deep_research
+uv sync
+uv run jupyter notebook research_agent.ipynb
+
+<span class="cmt"># 方式 2: LangGraph Server</span>
+langgraph dev</code></pre>
+
+<div class="ib gr"><b>✨ 关键设计</b><p><strong>InjectedToolArg</strong>：<code>max_results</code> 和 <code>topic</code> 参数对 LLM 不可见，由框架注入默认值，避免 LLM 随意修改搜索参数。</p></div>
+</section>
+
+<!-- Example 2: Content Builder -->
+<section id="ex-content-builder">
+<h2>✍️ 示例二：Content Builder — 内容写作代理</h2>
+<p>一个完全通过文件系统配置的内容写作代理，演示了 Deep Agents 三大文件系统原语：<strong>Memory</strong>（AGENTS.md）、<strong>Skills</strong>（SKILL.md）和 <strong>Subagents</strong>（subagents.yaml）。</p>
+
+<h3>项目结构</h3>
+<pre><code>content-builder-agent/
+├── <span style="color:#4ade80">AGENTS.md</span>                   <span class="cmt"># Memory: 品牌调性、写作标准、内容支柱</span>
+├── <span style="color:#fb923c">subagents.yaml</span>              <span class="cmt"># 子代理配置（researcher 使用 Claude Haiku）</span>
+├── <span style="color:#a78bfa">skills/</span>
+│   ├── blog-post/SKILL.md       <span class="cmt"># 博客写作工作流：研究→写作→配图</span>
+│   └── social-media/SKILL.md    <span class="cmt"># 社媒写作：LinkedIn/Twitter 格式指导</span>
+├── content_writer.py            <span class="cmt"># 主脚本：工具定义 + agent 创建 + 流式输出</span>
+└── pyproject.toml               <span class="cmt"># 依赖：deepagents, google-genai, tavily-python</span></code></pre>
+
+<h3>核心代码</h3>
+<pre><code><span class="kw">from</span> <span class="cls">deepagents</span> <span class="kw">import</span> create_deep_agent
+<span class="kw">from</span> <span class="cls">deepagents.backends</span> <span class="kw">import</span> FilesystemBackend
+
+<span class="kw">def</span> <span class="fn">create_content_writer</span>():
+    <span class="kw">return</span> <span class="fn">create_deep_agent</span>(
+        memory=[<span class="str">"./AGENTS.md"</span>],                        <span class="cmt"># Memory 中间件加载品牌风格</span>
+        skills=[<span class="str">"./skills/"</span>],                          <span class="cmt"># Skills 中间件按需加载</span>
+        tools=[generate_cover, generate_social_image], <span class="cmt"># Gemini 图片生成</span>
+        subagents=<span class="fn">load_subagents</span>(<span class="str">"subagents.yaml"</span>),   <span class="cmt"># YAML 外化配置</span>
+        backend=<span class="fn">FilesystemBackend</span>(root_dir=EXAMPLE_DIR),
+    )</code></pre>
+
+<h3>YAML 外化子代理配置</h3>
+<pre><code><span class="cmt"># subagents.yaml</span>
+researcher:
+  description: >
+    ALWAYS use this first to research any topic before writing content.
+    Searches the web for current information.
+  model: anthropic:claude-haiku-4-5-20251001     <span class="cmt"># 使用更快更便宜的 Haiku</span>
+  system_prompt: |
+    You are a research assistant. You have web_search and write_file tools.
+    Make 2-3 targeted searches, save findings to the specified path.
+  tools:
+    - web_search</code></pre>
+
+<pre><code><span class="cmt"># 加载 YAML 并映射工具名到实际对象</span>
+<span class="kw">def</span> <span class="fn">load_subagents</span>(config_path):
+    available_tools = {<span class="str">"web_search"</span>: web_search}
+    <span class="kw">with</span> <span class="fn">open</span>(config_path) <span class="kw">as</span> f:
+        config = yaml.<span class="fn">safe_load</span>(f)
+    subagents = []
+    <span class="kw">for</span> name, spec <span class="kw">in</span> config.items():
+        subagent = {<span class="str">"name"</span>: name, <span class="str">"description"</span>: spec[<span class="str">"description"</span>], ...}
+        <span class="kw">if</span> <span class="str">"tools"</span> <span class="kw">in</span> spec:
+            subagent[<span class="str">"tools"</span>] = [available_tools[t] <span class="kw">for</span> t <span class="kw">in</span> spec[<span class="str">"tools"</span>]]
+        subagents.<span class="fn">append</span>(subagent)
+    <span class="kw">return</span> subagents</code></pre>
+
+<h3>自定义工具 — Gemini 图片生成</h3>
+<pre><code><span class="dec">@tool</span>
+<span class="kw">def</span> <span class="fn">generate_cover</span>(prompt: <span class="cls">str</span>, slug: <span class="cls">str</span>) -> <span class="cls">str</span>:
+    <span class="str">"""生成博客封面图。保存到 blogs/&lt;slug&gt;/hero.png"""</span>
+    <span class="kw">from</span> <span class="cls">google</span> <span class="kw">import</span> genai
+    client = genai.<span class="fn">Client</span>()
+    response = client.models.<span class="fn">generate_content</span>(
+        model=<span class="str">"gemini-2.5-flash-image"</span>, contents=[prompt])
+    <span class="kw">for</span> part <span class="kw">in</span> response.parts:
+        <span class="kw">if</span> part.inline_data <span class="kw">is not None</span>:
+            image = part.<span class="fn">as_image</span>()
+            image.<span class="fn">save</span>(<span class="str">f"blogs/{slug}/hero.png"</span>)
+    <span class="kw">return</span> <span class="str">"Image saved"</span></code></pre>
+
+<h3>执行流程</h3>
+<div class="arch">1. 用户发送任务: <span style="color:#38bdf8">"Write a blog post about prompt engineering"</span>
+    │
+2. Agent 加载 <span style="color:#4ade80">AGENTS.md</span> (品牌调性) → 判断需要 <span style="color:#a78bfa">blog-post</span> 技能 → 按需读取 SKILL.md
+    │
+3. 委托 <span style="color:#fb923c">researcher</span> 子代理 (Haiku): web_search → 保存到 research/prompt-engineering.md
+    │
+4. 读取研究结果 → 按照 SKILL.md 工作流撰写博客 → 保存到 blogs/prompt-engineering/post.md
+    │
+5. 调用 <span style="color:#22d3ee">generate_cover</span> → Gemini 生成封面图 → 保存到 blogs/prompt-engineering/hero.png
+    │
+<span style="color:#4ade80">输出:</span>
+blogs/prompt-engineering/
+├── post.md        <span class="cmt"># 博客内容</span>
+└── hero.png       <span class="cmt"># 封面图</span>
+research/
+└── prompt-engineering.md  <span class="cmt"># 研究素材</span></div>
+
+<h3>运行</h3>
+<pre><code><span class="kw">export</span> ANTHROPIC_API_KEY=<span class="str">"..."</span>
+<span class="kw">export</span> GOOGLE_API_KEY=<span class="str">"..."</span>    <span class="cmt"># Gemini 图片生成</span>
+<span class="kw">export</span> TAVILY_API_KEY=<span class="str">"..."</span>   <span class="cmt"># 网络搜索 (可选)</span>
+
+cd examples/content-builder-agent
+uv run python content_writer.py <span class="str">"Write a blog post about prompt engineering"</span>
+uv run python content_writer.py <span class="str">"Create a LinkedIn post about AI agents"</span></code></pre>
+
+<div class="ib pu"><b>💡 渐进式披露</b><p>AGENTS.md（品牌调性）始终注入系统提示；Skills（blog-post / social-media）仅在侧边栏显示名称和描述，代理判断需要哪个技能后才读取完整的 SKILL.md 工作流指令。这减少了不必要的 token 消耗。</p></div>
+</section>
+
+<!-- Example 3: Text-to-SQL -->
+<section id="ex-text-to-sql">
+<h2>🗄️ 示例三：Text-to-SQL — 自然语言查询数据库</h2>
+<p>使用 <strong>LangChain SQLDatabaseToolkit</strong> 的 SQL 工具，配合 Deep Agents 的规划（<code>write_todos</code>）和技能系统，实现自然语言到 SQL 查询的转换。</p>
+
+<h3>项目结构</h3>
+<pre><code>text-to-sql-agent/
+├── <span style="color:#4ade80">AGENTS.md</span>                   <span class="cmt"># 代理身份 + 安全规则 (禁止 DML)</span>
+├── <span style="color:#a78bfa">skills/</span>
+│   ├── query-writing/SKILL.md   <span class="cmt"># SQL 查询编写工作流（简单/复杂）</span>
+│   └── schema-exploration/SKILL.md <span class="cmt"># Schema 探索技能</span>
+├── agent.py                     <span class="cmt"># 核心实现 + CLI</span>
+├── chinook.db                   <span class="cmt"># Chinook 示例数据库</span>
+└── pyproject.toml</code></pre>
+
+<h3>核心代码</h3>
+<pre><code><span class="kw">from</span> <span class="cls">deepagents</span> <span class="kw">import</span> create_deep_agent
+<span class="kw">from</span> <span class="cls">deepagents.backends</span> <span class="kw">import</span> FilesystemBackend
+<span class="kw">from</span> <span class="cls">langchain_anthropic</span> <span class="kw">import</span> ChatAnthropic
+<span class="kw">from</span> <span class="cls">langchain_community.agent_toolkits</span> <span class="kw">import</span> SQLDatabaseToolkit
+<span class="kw">from</span> <span class="cls">langchain_community.utilities</span> <span class="kw">import</span> SQLDatabase
+
+<span class="kw">def</span> <span class="fn">create_sql_deep_agent</span>():
+    db = SQLDatabase.<span class="fn">from_uri</span>(<span class="str">f"sqlite:///{db_path}"</span>, sample_rows_in_table_info=<span class="dec">3</span>)
+    model = <span class="fn">ChatAnthropic</span>(model=<span class="str">"claude-sonnet-4-5-20250929"</span>, temperature=<span class="dec">0</span>)
+
+    <span class="cmt"># LangChain SQL 工具集: list_tables, schema, query, query_checker</span>
+    toolkit = <span class="fn">SQLDatabaseToolkit</span>(db=db, llm=model)
+    sql_tools = toolkit.<span class="fn">get_tools</span>()
+
+    agent = <span class="fn">create_deep_agent</span>(
+        model=model,
+        memory=[<span class="str">"./AGENTS.md"</span>],          <span class="cmt"># 身份 + 安全规则</span>
+        skills=[<span class="str">"./skills/"</span>],             <span class="cmt"># 查询编写 + Schema 探索</span>
+        tools=sql_tools,                 <span class="cmt"># SQL 工具集</span>
+        subagents=[],                    <span class="cmt"># 不需要子代理</span>
+        backend=<span class="fn">FilesystemBackend</span>(root_dir=base_dir),
+    )
+    <span class="kw">return</span> agent</code></pre>
+
+<h3>安全边界 (AGENTS.md)</h3>
+<pre><code><span class="cmt">## Safety Rules</span>
+<span style="color:#D55E00">**NEVER execute these statements:**</span>
+- INSERT / UPDATE / DELETE / DROP / ALTER / TRUNCATE / CREATE
+<span style="color:#4ade80">**You have READ-ONLY access. Only SELECT queries are allowed.**</span></code></pre>
+
+<h3>技能工作流</h3>
+<table>
+<tr><th>技能</th><th>触发时机</th><th>工作流步骤</th></tr>
+<tr><td><code>query-writing</code></td><td>用户请求查询数据</td><td>识别表 → 获取 Schema → 构造 SQL → 验证执行 → 格式化结果</td></tr>
+<tr><td><code>schema-exploration</code></td><td>用户询问表结构</td><td>列出所有表 → 获取列/类型 → 映射外键关系 → 返回 ERD</td></tr>
+</table>
+
+<h3>执行流程示例</h3>
+<div class="arch"><span style="color:#38bdf8">问题: "Which employee generated the most revenue by country?"</span>
+    │
+1. <span style="color:#a78bfa">write_todos</span>: 列出表 → 检查 Employee/Invoice/Customer Schema → 计划 JOIN → 执行
+    │
+2. <span style="color:#4ade80">sql_db_list_tables</span> → 发现 11 张表
+    │
+3. <span style="color:#4ade80">sql_db_schema</span>("Employee, Invoice, Customer") → 获取列和外键
+    │
+4. <span style="color:#fb923c">sql_db_query</span>:
+    SELECT e.FirstName, c.Country, ROUND(SUM(i.Total), 2) AS Revenue
+    FROM Employee e
+    JOIN Customer c ON e.EmployeeId = c.SupportRepId
+    JOIN Invoice i ON c.CustomerId = i.CustomerId
+    GROUP BY e.FirstName, c.Country ORDER BY Revenue DESC LIMIT 5
+    │
+5. <span style="color:#22d3ee">格式化答案</span>: Jane Peacock 在 USA 产生了最高收入...</div>
+
+<h3>运行</h3>
+<pre><code>cd examples/text-to-sql-agent
+curl -L -o chinook.db https://github.com/lerocha/chinook-database/raw/master/.../Chinook_Sqlite.sqlite
+uv venv --python <span class="dec">3.11</span> && source .venv/bin/activate && uv pip install -e .
+
+python agent.py <span class="str">"What are the top 5 best-selling artists?"</span>
+python agent.py <span class="str">"How many customers are from Canada?"</span></code></pre>
+</section>
+
+<!-- Example 4: NVIDIA GPU Agent -->
+<section id="ex-nvidia">
+<h2>🎮 示例四：NVIDIA GPU Agent — 多模型 + GPU 加速</h2>
+<p>最复杂的示例，展示 <strong>多模型架构</strong>（Claude 编排 + Nemotron Super 研究）、<strong>GPU 代码执行</strong>（Modal 沙箱 + NVIDIA RAPIDS）和 <strong>自改进记忆</strong>。</p>
+
+<h3>架构设计</h3>
+<div class="arch"><span style="color:#38bdf8">create_deep_agent (编排器: Claude Sonnet 4.6)</span>
+    │   memory=["/memory/AGENTS.md"], context_schema=Context
+    │
+    ├── <span style="color:#fb923c">researcher-agent</span> (NVIDIA Nemotron Super 120B)
+    │       研究子代理：web 搜索 + 信息综合
+    │       tools: [tavily_search]
+    │
+    ├── <span style="color:#a78bfa">data-processor-agent</span> (Claude Sonnet 4.6)
+    │       数据处理子代理：GPU 代码执行
+    │       tools: [tavily_search], skills: ["/skills/"]
+    │       技能: cuDF 分析、cuML 机器学习、数据可视化、文档处理
+    │
+    └── <span style="color:#4ade80">backend: Modal Sandbox</span>
+            GPU 模式: RAPIDS Docker + A10G GPU
+            CPU 模式: pandas + numpy + scipy
+            运行时通过 <span style="color:#22d3ee">context_schema</span> 切换</div>
+
+<h3>核心代码</h3>
+<pre><code><span class="kw">from</span> <span class="cls">deepagents</span> <span class="kw">import</span> create_deep_agent
+<span class="kw">from</span> <span class="cls">langchain_nvidia_ai_endpoints</span> <span class="kw">import</span> ChatNVIDIA
+
+<span class="kw">class</span> <span class="cls">Context</span>(<span class="cls">TypedDict</span>, total=<span class="cls">False</span>):
+    sandbox_type: <span class="cls">Literal</span>[<span class="str">"gpu"</span>, <span class="str">"cpu"</span>]  <span class="cmt"># 运行时切换</span>
+
+frontier_model = <span class="fn">init_chat_model</span>(<span class="str">"anthropic:claude-sonnet-4-6"</span>)
+nemotron_super = <span class="fn">ChatNVIDIA</span>(model=<span class="str">"nvidia/nemotron-3-super-120b-a12b"</span>)
+
+researcher_sub_agent = {
+    <span class="str">"name"</span>: <span class="str">"researcher-agent"</span>,
+    <span class="str">"model"</span>: nemotron_super,       <span class="cmt"># 研究用 NVIDIA 模型（快+便宜）</span>
+    <span class="str">"tools"</span>: [tavily_search],
+}
+data_processor_sub_agent = {
+    <span class="str">"name"</span>: <span class="str">"data-processor-agent"</span>,
+    <span class="str">"model"</span>: frontier_model,       <span class="cmt"># 数据处理用 Claude（推理强）</span>
+    <span class="str">"skills"</span>: [<span class="str">"/skills/"</span>],        <span class="cmt"># 注入 GPU 技能文件</span>
+}
+
+agent = <span class="fn">create_deep_agent</span>(
+    model=frontier_model,
+    tools=[tavily_search],
+    subagents=[researcher_sub_agent, data_processor_sub_agent],
+    memory=[<span class="str">"/memory/AGENTS.md"</span>],
+    backend=create_backend,           <span class="cmt"># 工厂函数，运行时创建沙箱</span>
+    context_schema=<span class="cls">Context</span>,           <span class="cmt"># 支持 GPU/CPU 切换</span>
+)</code></pre>
+
+<h3>Backend 工厂 — Modal GPU 沙箱</h3>
+<pre><code><span class="kw">def</span> <span class="fn">create_backend</span>(runtime):
+    ctx = runtime.context <span class="kw">or</span> {}
+    sandbox_type = ctx.<span class="fn">get</span>(<span class="str">"sandbox_type"</span>, <span class="str">"gpu"</span>)
+    use_gpu = sandbox_type == <span class="str">"gpu"</span>
+
+    <span class="cmt"># 尝试复用已有沙箱，否则创建新的</span>
+    sandbox = modal.Sandbox.<span class="fn">create</span>(
+        image=rapids_image <span class="kw">if</span> use_gpu <span class="kw">else</span> cpu_image,
+        gpu=<span class="str">"A10G"</span> <span class="kw">if</span> use_gpu <span class="kw">else</span> <span class="cls">None</span>,
+        timeout=<span class="dec">3600</span>, idle_timeout=<span class="dec">1800</span>,
+    )
+    backend = <span class="fn">ModalSandbox</span>(sandbox=sandbox)
+    <span class="fn">_seed_sandbox</span>(backend)  <span class="cmt"># 上传 skills/ 和 AGENTS.md 到沙箱</span>
+    <span class="kw">return</span> backend</code></pre>
+
+<h3>四大 GPU 技能</h3>
+<div class="cg">
+<div class="cd"><h4>cudf-analytics <span class="tg tg-g">GPU</span></h4><p>cuDF (pandas API on GPU)：groupby、统计摘要、相关性分析、异常检测 (IQR/Z-Score)</p></div>
+<div class="cd"><h4>cuml-machine-learning <span class="tg tg-g">GPU</span></h4><p>cuML (sklearn API on GPU)：分类、回归、聚类 (KMeans/DBSCAN)、降维 (PCA/UMAP/t-SNE)</p></div>
+<div class="cd"><h4>data-visualization <span class="tg tg-b">图表</span></h4><p>matplotlib + seaborn headless 模式：柱状图、折线图、散点图、热力图、箱线图等 11 种图表</p></div>
+<div class="cd"><h4>gpu-document-processing <span class="tg tg-p">文档</span></h4><p>大文档处理：PDF 文本提取、表格提取、语义分块、批量嵌入</p></div>
+</div>
+
+<h3>自改进记忆</h3>
+<div class="ib or"><b>🔄 自改进机制</b><p>当 data-processor-agent 发现 cuDF API 限制（如 <code>interpolate()</code> 未实现），会<strong>立即编辑自己的 SKILL.md</strong>，在 "Known Limitations" 部分添加注记。下次运行时自动加载这些知识，避免重复犯错。</p></div>
+
+<h3>运行</h3>
+<pre><code>cd examples/nvidia_deep_agent
+uv sync
+<span class="kw">export</span> ANTHROPIC_API_KEY=... NVIDIA_API_KEY=... TAVILY_API_KEY=...
+uv run modal setup     <span class="cmt"># 认证 Modal</span>
+uv run langgraph dev --allow-blocking
+
+<span class="cmt"># 在 LangSmith Studio 中尝试:</span>
+<span class="str">"Generate a 1000-row random dataset about credit card transactions, analyze it."</span></code></pre>
+</section>
+
+<!-- Example 5: Ralph Mode -->
+<section id="ex-ralph-mode">
+<h2>🔄 示例五：Ralph Mode — 自主循环模式</h2>
+<p>受 <a href="https://ghuntley.com" style="color:var(--blue)">Geoff Huntley</a> 启发的自主循环模式：每次迭代以<strong>全新上下文</strong>启动代理，文件系统和 git 作为跨迭代的持久化记忆。原始实现仅一行：<code>while :; do cat PROMPT.md | agent ; done</code></p>
+
+<h3>核心原理</h3>
+<div class="arch">  <span style="color:#38bdf8">Ralph 循环</span>
+  ┌─────────────────────────────────────────────────┐
+  │  Iteration 1 (全新上下文)                         │
+  │  "Your previous work is in the filesystem.       │
+  │   Check what exists and keep building.           │
+  │   TASK: Build a Python course. Make progress."   │
+  │                ↓                                 │
+  │  Agent 执行 → 创建/修改文件 → git commit           │
+  └─────────────────────────────────────────────────┘
+                   ↓ 文件系统持久化
+  ┌─────────────────────────────────────────────────┐
+  │  Iteration 2 (全新上下文，但文件系统保留)           │
+  │  Agent 检查已有文件 → 继续推进 → 保存进度          │
+  └─────────────────────────────────────────────────┘
+                   ↓
+                  ...
+                   ↓
+  <span style="color:#4ade80">Ctrl+C 停止</span> → 列出所有生成文件</div>
+
+<h3>核心代码</h3>
+<pre><code><span class="kw">from</span> <span class="cls">deepagents_cli.non_interactive</span> <span class="kw">import</span> run_non_interactive
+
+<span class="kw">async def</span> <span class="fn">ralph</span>(task, max_iterations=<span class="dec">0</span>, model_name=<span class="cls">None</span>, ...):
+    iteration = <span class="dec">1</span>
+    <span class="kw">while</span> max_iterations == <span class="dec">0</span> <span class="kw">or</span> iteration &lt;= max_iterations:
+        prompt = (
+            <span class="str">f"## Ralph Iteration {iteration}\n\n"</span>
+            <span class="str">f"Your previous work is in the filesystem. "</span>
+            <span class="str">f"Check what exists and keep building.\n\n"</span>
+            <span class="str">f"TASK:\n{task}\n\nMake progress. You'll be called again."</span>
+        )
+        exit_code = <span class="kw">await</span> <span class="fn">run_non_interactive</span>(
+            message=prompt,
+            assistant_id=<span class="str">"ralph"</span>,
+            model_name=model_name,
+            sandbox_type=sandbox_type,
+            quiet=<span class="cls">True</span>, stream=stream,
+        )
+        <span class="kw">if</span> exit_code == <span class="dec">130</span>: <span class="kw">break</span>  <span class="cmt"># Ctrl+C</span>
+        iteration += <span class="dec">1</span></code></pre>
+
+<h3>CLI 参数</h3>
+<table>
+<tr><th>参数</th><th>说明</th><th>示例</th></tr>
+<tr><td><code>task</code></td><td>声明式任务描述</td><td><code>"Build a REST API"</code></td></tr>
+<tr><td><code>--iterations</code></td><td>最大迭代次数 (0=无限)</td><td><code>--iterations 5</code></td></tr>
+<tr><td><code>--model</code></td><td>模型名称</td><td><code>--model claude-sonnet-4-6</code></td></tr>
+<tr><td><code>--sandbox</code></td><td>远程沙箱 (modal/daytona/agentcore/runloop)</td><td><code>--sandbox modal</code></td></tr>
+<tr><td><code>--sandbox-id</code></td><td>复用已有沙箱实例</td><td><code>--sandbox-id my-sandbox</code></td></tr>
+<tr><td><code>--shell-allow-list</code></td><td>自动批准的命令</td><td><code>--shell-allow-list recommended</code></td></tr>
+<tr><td><code>--work-dir</code></td><td>工作目录</td><td><code>--work-dir ./my-project</code></td></tr>
+</table>
+
+<h3>运行</h3>
+<pre><code>uv pip install deepagents-cli
+
+<span class="cmt"># 无限循环 (Ctrl+C 停止)</span>
+python ralph_mode.py <span class="str">"Build a Python programming course for beginners. Use git."</span>
+
+<span class="cmt"># 限制 5 次迭代</span>
+python ralph_mode.py <span class="str">"Build a REST API"</span> --iterations <span class="dec">5</span>
+
+<span class="cmt"># 使用远程沙箱</span>
+python ralph_mode.py <span class="str">"Build an app"</span> --sandbox modal</code></pre>
+
+<div class="ib bl"><b>💡 核心洞察</b><p><strong>最简上下文管理</strong>：每次迭代全新 context，文件系统 = 跨迭代记忆。不需要管理对话历史、token 限制或状态持久化。所有 agent 逻辑由 <code>run_non_interactive</code> 处理。</p></div>
+</section>
+
+<!-- Example 6: Downloading Agents -->
+<section id="ex-downloading">
+<h2>📦 示例六：下载即用 Agent</h2>
+<p>体现 Deep Agents 的核心哲学：<strong>"Agent = 文件夹"</strong>。一个 Agent 仅由 <code>AGENTS.md</code>（记忆/指令）+ <code>skills/</code>（技能文件）组成，无需编写代码。</p>
+
+<h3>概念</h3>
+<div class="cg">
+<div class="cd"><h4>Agent = 文件夹</h4><p>一个 AGENTS.md + skills/ 目录就是一个完整的 Agent。可以打包为 zip 共享分发。</p></div>
+<div class="cd"><h4>零配置运行</h4><p>解压到 <code>.deepagents</code> 目录后，直接用 <code>deepagents</code> CLI 命令运行，无需任何代码。</p></div>
+</div>
+
+<h3>使用方式</h3>
+<pre><code><span class="cmt"># 1. 安装 CLI</span>
+uv tool install deepagents-cli==<span class="dec">0.0.13</span>
+
+<span class="cmt"># 2. 创建项目并下载 Agent</span>
+mkdir my-project && cd my-project && git init
+curl -L https://...content-writer.zip -o agent.zip
+unzip agent.zip -d .deepagents
+
+<span class="cmt"># 3. 运行！</span>
+deepagents</code></pre>
+
+<h3>Agent 文件结构</h3>
+<pre><code>.deepagents/
+├── AGENTS.md                    <span class="cmt"># Agent 记忆和指令</span>
+└── skills/
+    ├── blog-post/SKILL.md       <span class="cmt"># 博客写作工作流</span>
+    └── social-media/SKILL.md    <span class="cmt"># 社交媒体工作流</span></code></pre>
+
+<h3>一行搞定</h3>
+<pre><code>git init && curl -L ...content-writer.zip -o agent.zip && unzip agent.zip -d .deepagents && rm agent.zip && deepagents</code></pre>
+
+<div class="ib gr"><b>✅ 分发哲学</b><p>Agent 的知识和能力不在代码里，而在文件里。这意味着非程序员也可以通过编辑 Markdown 文件来创建和定制 Agent，然后打包分享。</p></div>
+</section>
+
+<!-- Cross-example patterns -->
+<section id="ex-patterns">
+<h2>🔗 示例间的共通模式</h2>
+<table>
+<tr><th>模式</th><th>使用的示例</th><th>说明</th></tr>
+<tr><td><code>create_deep_agent()</code> 核心 API</td><td>所有 Python 示例</td><td>统一入口，参数化配置</td></tr>
+<tr><td>Memory (AGENTS.md)</td><td>Content Builder, Text-to-SQL, NVIDIA</td><td>持久化身份/规则/风格</td></tr>
+<tr><td>Skills (SKILL.md)</td><td>Content Builder, Text-to-SQL, NVIDIA</td><td>按需加载的专业工作流</td></tr>
+<tr><td>子代理 (Subagents)</td><td>Content Builder, Deep Research, NVIDIA</td><td>独立上下文隔离执行</td></tr>
+<tr><td>FilesystemBackend</td><td>Content Builder, Text-to-SQL</td><td>本地文件读写</td></tr>
+<tr><td>Modal 沙箱 Backend</td><td>NVIDIA GPU Agent</td><td>远程 GPU 执行</td></tr>
+<tr><td>Tavily 网络搜索</td><td>Content Builder, Deep Research, NVIDIA</td><td>URL 发现 + 全文抓取</td></tr>
+<tr><td>think_tool 反思</td><td>Deep Research</td><td>战略反思暂停</td></tr>
+<tr><td>Rich 终端输出</td><td>Content Builder, Text-to-SQL, Ralph</td><td>美化 CLI 显示</td></tr>
+<tr><td>LangGraph Server 部署</td><td>Deep Research, NVIDIA</td><td>langgraph.json 配置</td></tr>
+<tr><td>自改进记忆</td><td>NVIDIA GPU Agent</td><td>运行时编辑自身技能文件</td></tr>
+<tr><td>context_schema</td><td>NVIDIA GPU Agent</td><td>运行时 GPU/CPU 切换</td></tr>
+<tr><td>deepagents-cli 集成</td><td>Ralph Mode, 下载即用</td><td>CLI 命令行工具</td></tr>
+</table>
+</section>
+
+<!-- LangGraph Examples Overview -->
+<section id="lg-overview">
+<h2>🔷 LangGraph 示例模式总览</h2>
+<p>LangGraph 是 Deep Agents 的底层框架。<code>examples/</code> 目录包含 20+ 个基于 LangGraph <code>StateGraph</code> 的示例，涵盖 Agent 设计模式、RAG 变体、研究论文实现等。</p>
+<div class="ib bl"><b>📌 归档说明</b><p>这些示例已迁移至 <a href="https://docs.langchain.com/oss/python/langgraph/overview" style="color:var(--blue)">LangChain 统一文档站</a>。此处对其核心模式和架构进行讲解，帮助理解 LangGraph 的核心概念。</p></div>
+
+<div class="cg">
+<div class="cd"><div class="ci">🔄</div><h4>ReAct Agent</h4><p>Reason+Act 循环：LLM 思考→调用工具→观察结果→循环</p></div>
+<div class="cd"><div class="ci">📋</div><h4>Plan-and-Execute</h4><p>先生成完整计划，逐步执行，根据结果动态重新规划</p></div>
+<div class="cd"><div class="ci">🔍</div><h4>RAG 变体 (4种)</h4><p>CRAG/Self-RAG/Adaptive RAG/Agentic RAG + 本地 LLM 版本</p></div>
+<div class="cd"><div class="ci">🪞</div><h4>反思 & Reflexion</h4><p>生成→批评→修改循环，Reflexion 加入反思记忆</p></div>
+<div class="cd"><div class="ci">👥</div><h4>Multi-Agent</h4><p>多 Agent 协作 + 层级化团队（嵌套子图）</p></div>
+<div class="cd"><div class="ci">🌲</div><h4>LATS 树搜索</h4><p>LLM + 蒙特卡洛树搜索，多路径推理</p></div>
+<div class="cd"><div class="ci">⚡</div><h4>LLM Compiler</h4><p>DAG 形式规划，并行执行独立工具调用</p></div>
+<div class="cd"><div class="ci">🧠</div><h4>Self-Discover</h4><p>LLM 自动发现推理结构：Select→Adapt→Implement→Solve</p></div>
+</div>
+</section>
+
+<!-- LangGraph Agent Design Patterns -->
+<section id="lg-agent-patterns">
+<h2>🔷 Agent 设计模式</h2>
+
+<h3>1. ReAct Agent — 从零构建</h3>
+<p>最基础的 Agent 模式：LLM 推理→调用工具→观察结果→循环直到得出答案。</p>
+<div class="arch">START → <span style="color:#38bdf8">agent (LLM 决策)</span> → [条件: 有工具调用?]
+                                  │ yes → <span style="color:#4ade80">tools (执行工具)</span> → agent (循环)
+                                  │ no  → <span style="color:#fb923c">END</span></div>
+<p>变体：<strong>ReAct + 结构化输出</strong> — 使用 Pydantic 模型约束 Agent 的最终输出格式。</p>
+
+<h3>2. Plan-and-Execute — 先计划后执行</h3>
+<p>先一次性生成完整步骤计划，然后逐步执行每一步，并根据执行结果重新规划。</p>
+<div class="arch">START → <span style="color:#38bdf8">Planner</span> (生成步骤列表)
+          │
+          ↓
+        <span style="color:#4ade80">Executor</span> (执行当前步骤)
+          │
+          ↓
+        <span style="color:#a78bfa">Re-planner</span> (根据结果更新计划) → [条件: 还有步骤?]
+                                            │ yes → Executor (循环)
+                                            │ no  → <span style="color:#fb923c">END</span></div>
+
+<h3>3. LLM Compiler — 并行工具执行</h3>
+<p>LLM 作为任务规划器，生成 <strong>DAG</strong> 形式的工具调用计划，独立调用<strong>并行执行</strong>。</p>
+<div class="arch">START → <span style="color:#38bdf8">Planner</span> (生成 DAG 调用计划)
+          │
+          ↓
+        <span style="color:#4ade80">Task Fetching</span> (并行执行独立工具调用)
+          │
+          ↓
+        <span style="color:#a78bfa">Joiner</span> (合并结果) → [条件: 需要重新规划?]
+                                │ yes → Planner (循环)
+                                │ no  → <span style="color:#fb923c">END</span></div>
+
+<h3>4. Multi-Agent 协作</h3>
+<table>
+<tr><th>模式</th><th>描述</th><th>关键技术</th></tr>
+<tr><td><strong>扁平协作</strong></td><td>多个专业 Agent（Researcher, Coder 等）通过共享消息状态协作</td><td>路由器条件边，共享 <code>messages</code> 状态</td></tr>
+<tr><td><strong>层级化团队</strong></td><td>顶层 Supervisor → 子团队 Supervisor → 专业 Agent，支持嵌套</td><td>嵌套 <code>StateGraph</code>（子图），层级路由</td></tr>
+</table>
+
+<h3>5. ReWOO — 无观察推理</h3>
+<p>与 ReAct 不同，ReWOO 先<strong>一次性制定完整计划</strong>（含所有工具调用），然后<strong>批量执行</strong>，最后用全部结果推理。减少 LLM 调用次数。</p>
+<div class="arch">START → <span style="color:#38bdf8">Planner</span> (一次性规划所有步骤 + 工具调用)
+          │
+          ↓
+        <span style="color:#4ade80">Worker</span> (批量执行所有工具调用)
+          │
+          ↓
+        <span style="color:#a78bfa">Solver</span> (综合所有结果进行推理) → <span style="color:#fb923c">END</span></div>
+</section>
+
+<!-- LangGraph RAG Variants -->
+<section id="lg-rag">
+<h2>🔷 RAG 变体详解 (4 种核心架构)</h2>
+<p>LangGraph 最丰富的示例类别，包含 4 种 RAG 架构（含本地 LLM 变体共 9 个 notebook）。</p>
+
+<h3>CRAG — 纠正式 RAG</h3>
+<p>论文：<a href="https://arxiv.org/abs/2401.15884" style="color:var(--blue)">arxiv.org/abs/2401.15884</a></p>
+<p>检索后对文档进行<strong>相关性评分</strong>，若文档不相关则<strong>改写查询 + Web 搜索</strong>补充。</p>
+<div class="arch">START → <span style="color:#38bdf8">retrieve</span> → <span style="color:#4ade80">grade_documents</span> → [条件: 文档相关?]
+                                                   │ yes → <span style="color:#a78bfa">generate</span> → END
+                                                   │ no  → <span style="color:#fb923c">transform_query</span> → <span style="color:#22d3ee">web_search</span> → generate → END</div>
+<pre><code><span class="kw">class</span> <span class="cls">GraphState</span>(<span class="cls">TypedDict</span>):
+    question: <span class="cls">str</span>
+    generation: <span class="cls">str</span>
+    web_search: <span class="cls">str</span>      <span class="cmt"># "yes" / "no" 标志</span>
+    documents: <span class="cls">List</span>[<span class="cls">str</span>]</code></pre>
+
+<h3>Self-RAG — 自反思 RAG</h3>
+<p>论文：<a href="https://arxiv.org/abs/2310.11511" style="color:var(--blue)">arxiv.org/abs/2310.11511</a></p>
+<p>比 CRAG 多两层检查：<strong>幻觉检测</strong>（生成是否基于文档）+ <strong>答案质量检查</strong>（是否真正回答了问题）。</p>
+<div class="arch">START → <span style="color:#38bdf8">retrieve</span> → <span style="color:#4ade80">grade_documents</span> → [条件: 文档相关?]
+    │ yes → <span style="color:#a78bfa">generate</span> → [条件: 幻觉检查 + 答案质量]
+    │                       │ 通过 → <span style="color:#fb923c">END</span>
+    │                       │ 幻觉 → generate (重试)
+    │                       │ 不相关 → transform_query → retrieve (循环)
+    │ no  → <span style="color:#22d3ee">transform_query</span> → retrieve (循环)</div>
+
+<h3>Adaptive RAG — 自适应 RAG</h3>
+<p>论文：<a href="https://arxiv.org/abs/2403.14403" style="color:var(--blue)">arxiv.org/abs/2403.14403</a></p>
+<p><strong>统一查询分析 + 自纠正 RAG</strong>。先通过路由器分析问题该走 Web 搜索还是向量库检索，检索后走 Self-RAG 全套自纠正。</p>
+<div class="arch">START → <span style="color:#38bdf8">[路由: route_question]</span>
+          │ web_search → <span style="color:#22d3ee">web_search</span> → generate → END
+          │ vectorstore → <span style="color:#4ade80">retrieve</span> → grade_documents → [条件]
+                                                         │ yes → generate → [幻觉+质量检查]
+                                                         │ no  → transform_query → retrieve</div>
+
+<h3>Agentic RAG — Agent 驱动 RAG</h3>
+<p>将 retriever 包装为<strong>工具</strong>，让 Agent 自主决定是否需要检索。使用 <code>add_messages</code> 注解的消息追加模式。</p>
+<div class="arch">START → <span style="color:#38bdf8">agent (LLM 决策)</span> → [条件: 需要检索?]
+          │ yes → <span style="color:#4ade80">retrieve (ToolNode)</span> → <span style="color:#a78bfa">grade_documents</span> → [条件]
+          │                                                     │ 相关 → <span style="color:#22d3ee">generate</span> → END
+          │                                                     │ 不相关 → <span style="color:#fb923c">rewrite</span> → agent (循环)
+          │ no  → END</div>
+<pre><code><span class="kw">class</span> <span class="cls">AgentState</span>(<span class="cls">TypedDict</span>):
+    messages: <span class="cls">Annotated</span>[<span class="cls">Sequence</span>[<span class="cls">BaseMessage</span>], add_messages]  <span class="cmt"># 消息追加</span></code></pre>
+
+<h3>RAG 变体对比</h3>
+<table>
+<tr><th>特性</th><th>CRAG</th><th>Self-RAG</th><th>Adaptive RAG</th><th>Agentic RAG</th></tr>
+<tr><td>查询路由</td><td>无</td><td>无</td><td><strong>有</strong> (web/vectorstore)</td><td><strong>有</strong> (agent 决定)</td></tr>
+<tr><td>文档评分</td><td><strong>有</strong></td><td><strong>有</strong></td><td><strong>有</strong></td><td><strong>有</strong></td></tr>
+<tr><td>幻觉检查</td><td>无</td><td><strong>有</strong></td><td><strong>有</strong></td><td>无</td></tr>
+<tr><td>答案质量检查</td><td>无</td><td><strong>有</strong></td><td><strong>有</strong></td><td>无</td></tr>
+<tr><td>查询改写</td><td><strong>有</strong></td><td><strong>有</strong></td><td><strong>有</strong></td><td><strong>有</strong></td></tr>
+<tr><td>Web 搜索回退</td><td><strong>有</strong></td><td>无</td><td><strong>有</strong></td><td>无</td></tr>
+<tr><td>复杂度</td><td>中</td><td>高</td><td>最高</td><td>中</td></tr>
+</table>
+<p>每种变体还有<strong>本地 LLM 版本</strong>（使用 Ollama），以及<strong>Cohere Command R</strong> 和 <strong>Pinecone</strong> 集成版本。</p>
+</section>
+
+<!-- LangGraph Research Paper Implementations -->
+<section id="lg-research">
+<h2>🔷 研究论文实现</h2>
+<div class="cg">
+<div class="cd"><h4>Reflection <span class="tg tg-b">基础反思</span></h4><p>Generator 生成 → Reflector 批评 → 基于反思修改 → 循环直到满意。最基础的自我改进模式。</p></div>
+<div class="cd"><h4>Reflexion <span class="tg tg-p">论文</span></h4><p>Agent 执行→环境反馈→语言化反思→<strong>存入反思记忆</strong>→后续迭代使用。比基础反思更进一步。</p></div>
+<div class="cd"><h4>LATS <span class="tg tg-g">树搜索</span></h4><p>LLM + 蒙特卡洛树搜索（MCTS），在树结构中探索多条推理路径，反思+回溯找最优答案。</p></div>
+<div class="cd"><h4>Self-Discover <span class="tg tg-o">论文</span></h4><p>LLM 自动发现推理结构：① SELECT 推理模块 ② ADAPT 调整 ③ IMPLEMENT 构建 ④ SOLVE 解题。线性 Pipeline。</p></div>
+</div>
+</section>
+
+<!-- LangGraph Application Tools -->
+<section id="lg-tools">
+<h2>🔷 应用工具类示例</h2>
+<table>
+<tr><th>示例</th><th>描述</th><th>核心模式</th></tr>
+<tr><td><strong>Chatbot 信息收集</strong></td><td>通过 prompting 逐步向用户收集所需信息</td><td>状态机 + 条件路由</td></tr>
+<tr><td><strong>聊天模拟评估</strong></td><td>一个 LLM 扮演用户与被测 chatbot 对话，自动评估质量</td><td>双 Agent 对话 + 角色交换 + <code>add_messages</code> 累加器</td></tr>
+<tr><td><strong>代码助手 (自纠正)</strong></td><td>代码生成→执行→检查错误→自纠正循环 (使用 Mistral)</td><td>生成→执行→验证→修复循环</td></tr>
+<tr><td><strong>客户支持</strong></td><td>客户支持聊天机器人，多轮对话 + 工具调用</td><td>对话状态管理</td></tr>
+<tr><td><strong>信息抽取 + 重试</strong></td><td>结构化信息抽取，验证失败时自动重试</td><td>抽取→验证→重试循环</td></tr>
+<tr><td><strong>Human-in-the-Loop</strong></td><td>图执行中暂停，等待人类输入后恢复</td><td><code>interrupt</code> + 状态恢复</td></tr>
+<tr><td><strong>SQL Agent</strong></td><td>自然语言→SQL 查询→执行→错误处理→重试</td><td>工具调用 + 错误处理循环</td></tr>
+<tr><td><strong>TNT-LLM</strong></td><td>LLM 自动构建和迭代优化文本分类 taxonomy</td><td>迭代优化循环</td></tr>
+<tr><td><strong>USACO 编程</strong></td><td>LLM 解 USACO 竞赛编程题：分析→生成→测试→反思→修正</td><td>代码生成→测试→反思→修正循环</td></tr>
+<tr><td><strong>WebVoyager</strong></td><td>多模态 LLM 自动浏览网页：截图→决策→操作→循环</td><td>多模态状态管理 + 浏览器操作</td></tr>
+<tr><td><strong>子图 (Subgraph)</strong></td><td>在大图中嵌入子图的模块化设计</td><td>嵌套 <code>StateGraph</code></td></tr>
+<tr><td><strong>LangSmith 追踪</strong></td><td>为 LangGraph 执行分配 Run ID 进行追踪调试</td><td>config 中传入 run_id</td></tr>
+</table>
+
+<h3>LangGraph 核心模式速查</h3>
+<table>
+<tr><th>模式</th><th>使用的示例</th></tr>
+<tr><td><code>StateGraph</code> + <code>TypedDict</code> 状态</td><td>所有示例</td></tr>
+<tr><td>条件边 <code>add_conditional_edges</code></td><td>所有 RAG、ReAct、Plan-and-Execute</td></tr>
+<tr><td>循环图 (cycles)</td><td>Self-RAG、Reflexion、USACO、代码助手</td></tr>
+<tr><td>结构化 LLM 输出 (Pydantic Graders)</td><td>所有 RAG（Retrieval/Hallucination/Answer Grader）</td></tr>
+<tr><td><code>Annotated[..., add_messages]</code></td><td>Agentic RAG、聊天模拟</td></tr>
+<tr><td><code>ToolNode</code></td><td>Agentic RAG</td></tr>
+<tr><td>嵌套子图</td><td>层级化 Agent 团队</td></tr>
+<tr><td>线性 Pipeline</td><td>Self-Discover、ReWOO</td></tr>
+<tr><td>反思/自纠正</td><td>Reflection、Reflexion、Self-RAG、CRAG、代码助手</td></tr>
+</table>
+</section>
+
+<!-- Design -->
+<section id="design">
+<h2>🧩 设计理念</h2>
+<div class="cg">
+<div class="cd"><h4>四大支柱</h4><p>规划工具 + 子代理 + 文件系统 + 详细提示 — 借鉴 Deep Research / Manus / Claude Code</p></div>
+<div class="cd"><h4>中间件优先</h4><p>中间件拦截每次 LLM 调用，能动态修改工具列表、注入提示、管理状态 — 普通工具做不到</p></div>
+<div class="cd"><h4>Backend 可插拔</h4><p>统一接口支持临时状态、本地文件、持久化存储、云沙箱等多种策略</p></div>
+<div class="cd"><h4>子代理隔离</h4><p>独立上下文窗口和状态，只返回最终结果，防止主线程上下文膨胀</p></div>
+<div class="cd"><h4>渐进式披露</h4><p>技能系统仅在提示中显示名称和描述，agent 按需读取完整指令，节省 token</p></div>
+<div class="cd"><h4>LangGraph 原生</h4><p>返回 CompiledStateGraph，兼容 streaming、Studio、checkpointers 等所有 LangGraph 功能</p></div>
+</div>
+</section>
+
+<!-- Monorepo -->
+<section id="monorepo">
+<h2>📂 仓库结构</h2>
+<pre><code>deepagents/
+├── libs/
+│   ├── deepagents/     <span class="cmt"># SDK 核心库</span>
+│   │   ├── deepagents/
+│   │   │   ├── graph.py           <span class="cmt"># create_deep_agent()</span>
+│   │   │   ├── _models.py         <span class="cmt"># 模型解析</span>
+│   │   │   ├── backends/          <span class="cmt"># 存储后端</span>
+│   │   │   │   ├── protocol.py    <span class="cmt"># BackendProtocol 接口</span>
+│   │   │   │   ├── state.py       <span class="cmt"># StateBackend</span>
+│   │   │   │   ├── filesystem.py  <span class="cmt"># FilesystemBackend</span>
+│   │   │   │   ├── store.py       <span class="cmt"># StoreBackend</span>
+│   │   │   │   ├── composite.py   <span class="cmt"># CompositeBackend</span>
+│   │   │   │   ├── local_shell.py <span class="cmt"># LocalShellBackend</span>
+│   │   │   │   └── sandbox.py     <span class="cmt"># BaseSandbox</span>
+│   │   │   └── middleware/        <span class="cmt"># 中间件</span>
+│   │   │       ├── filesystem.py  <span class="cmt"># 文件系统工具</span>
+│   │   │       ├── memory.py      <span class="cmt"># 记忆</span>
+│   │   │       ├── skills.py      <span class="cmt"># 技能</span>
+│   │   │       ├── subagents.py   <span class="cmt"># 同步子代理</span>
+│   │   │       └── summarization.py <span class="cmt"># 对话压缩</span>
+│   │   └── tests/
+│   ├── cli/            <span class="cmt"># CLI 工具</span>
+│   ├── acp/            <span class="cmt"># Agent Context Protocol</span>
+│   ├── evals/          <span class="cmt"># 评估套件</span>
+│   └── partners/       <span class="cmt"># 集成包 (Daytona 等)</span>
+├── examples/           <span class="cmt"># 示例项目 (6个)</span>
+│   ├── deep_research/           <span class="cmt"># 深度研究</span>
+│   ├── content-builder-agent/   <span class="cmt"># 内容写作</span>
+│   ├── text-to-sql-agent/       <span class="cmt"># Text-to-SQL</span>
+│   ├── nvidia_deep_agent/       <span class="cmt"># NVIDIA GPU</span>
+│   ├── ralph_mode/              <span class="cmt"># 自主循环</span>
+│   └── downloading_agents/      <span class="cmt"># 下载即用</span>
+└── README.md</code></pre>
+<div class="ib bl"><b>📌 依赖关系</b><p>核心依赖：langchain-core ≥1.2.21、langchain ≥1.2.11、langchain-anthropic ≥1.4.0、langchain-google-genai ≥4.2.1、wcmatch。Python ≥3.11。</p></div>
+</section>
+
+<div style="text-align:center;padding:40px 0;color:var(--t3);font-size:.8rem">
+<p>Deep Agents v0.5.0a2 · 源码分析文档</p>
+<p>Generated from source code at <code>/Users/yangqiuhua/Documents/deepagents</code></p>
+</div>
+</div>
+</body>
+</html>
